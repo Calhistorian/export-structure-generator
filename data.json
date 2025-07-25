@@ -1,0 +1,14 @@
+{
+  "1": {
+    "id": 1,
+    "name": "Alice Smith",
+    "role": "ADMIN",
+    "createdAt": "2025-05-02T05:57:12.940Z"
+  },
+  "2": {
+    "id": 2,
+    "name": "Bob Johnson",
+    "role": "USER",
+    "createdAt": "2025-05-02T05:57:12.940Z"
+  }
+}

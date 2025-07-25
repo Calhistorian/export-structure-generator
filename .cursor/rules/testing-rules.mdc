@@ -1,0 +1,10 @@
+---
+description: When completing tasks regarding testing or testing frameworks, follow these rules.
+globs: 
+alwaysApply: false
+---
+
+# Testing and Test Regime
+
+- Use vitest library for testing
+- Keep testing scope minimal unless requested

@@ -1,0 +1,14 @@
+---
+description: Rules for TypeScript files
+globs: *.ts, *.tsx
+alwaysApply: false
+---
+# Coding Standards
+- Use TypeScript for all new code.
+- Ensure all components are properly typed with interfaces or types.
+
+## Styling
+- Utilize Tailwind CSS for styling.
+- Follow the BEM naming convention for class names.
+
+[tsconfig.json](mdc:tsconfig.json)
