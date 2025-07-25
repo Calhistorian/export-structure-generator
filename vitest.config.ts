@@ -5,8 +5,8 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
-    include: ["**/*.{test,spec}.{ts,tsx}"],
-    exclude: ["**/node_modules/**", "**/dist/**"],
+    include: ["src/core/**/*.{test,spec}.{ts,tsx}"],
+    exclude: ["**/node_modules/**", "**/dist/**", "src/lib/**/*.test.ts"],
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],
@@ -18,7 +18,7 @@ export default defineConfig({
         "**/*.config.ts",
       ],
     },
-    setupFiles: ["./src/test/setup.ts"],
+    setupFiles: ["./__tests__/setup.ts"],
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },

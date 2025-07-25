@@ -1,74 +1,130 @@
 #!/usr/bin/env node
-/**
- * Command Line Interface
- *
- * Provides a command-line interface for the application.
- */
 
-import { Command } from "commander";
-import { env } from "../config/index.js";
-import { logger } from "../lib/logger/index.js";
+import { Command } from 'commander';
+import * as path from 'path';
+import chalk from 'chalk';
+import { ExportValidator } from '../core/validator.js';
+import { VersionManager } from '../core/versionManager.js';
+import { ValidationOptions } from '../types/index.js';
+import { createServiceLogger } from '../lib/logger/index.js';
 
-// Create a new command instance
+const logger = createServiceLogger('cli');
+
+// Create CLI
 const program = new Command();
 
-// Setup program metadata
-program.name("app-cli").description("TypeScript Template CLI").version("1.0.0");
-
-// Example command
 program
-  .command("info")
-  .description("Display environment information")
-  .action(() => {
-    logger.info("Environment Information", {
-      nodeEnv: env.NODE_ENV,
-      port: env.PORT,
-      logLevel: env.LOG_LEVEL,
-    });
+  .name('export-validator')
+  .description('Analyzes data exports to document structure and detect changes')
+  .version('1.0.0')
+  .argument('<input>', 'Path to export (folder, .zip, or .json file)')
+  .option('-m, --mode <mode>', 'Schema inference mode', 'strict')
+  .option('-s, --sample-size <number>', 'Number of records to sample', '1000')
+  .option('--sample-strategy <strategy>', 'Sampling strategy', 'stratified')
+  .option('--max-array-sample <number>', 'Maximum array items to sample', '100')
+  .option('--max-depth <number>', 'Maximum schema depth', '10')
+  .option('-o, --output <path>', 'Output directory', './output/validation-results')
+  .option('-f, --format <formats>', 'Output formats (comma-separated)', 'markdown,json')
+  .option('--snapshot <path>', 'Previous snapshot file for comparison')
+  .option('--auto-version', 'Automatically version based on changes', false)
+  .option('--ci', 'CI mode - fail on breaking changes', false)
+  .option('--fail-on <severity>', 'CI failure threshold (breaking|minor|patch)')
+  .action(async (input, options) => {
+    try {
+      const formats = options.format.split(',').map((f: string) => f.trim());
+      
+      const validationOptions: ValidationOptions = {
+        mode: options.mode as 'strict' | 'loose' | 'auto',
+        sampleSize: parseInt(options.sampleSize),
+        sampleStrategy: options.sampleStrategy as 'first' | 'random' | 'stratified',
+        maxArraySample: parseInt(options.maxArraySample),
+        maxDepth: parseInt(options.maxDepth),
+        output: path.resolve(options.output),
+        format: formats as ('markdown' | 'json' | 'html')[],
+        snapshot: options.snapshot,
+        autoVersion: options.autoVersion,
+        ci: options.ci,
+        failOn: options.failOn as 'breaking' | 'minor' | 'patch' | undefined
+      };
 
-    console.table({
-      "Node Environment": env.NODE_ENV,
-      "Server Port": env.PORT,
-      Host: env.HOST,
-      "Log Level": env.LOG_LEVEL,
-      "Telemetry Enabled": env.ENABLE_TELEMETRY,
-    });
+      const validator = new ExportValidator(validationOptions);
+      await validator.validate(input);
+      
+    } catch (error) {
+      logger.error('Validation failed', error);
+      console.error(chalk.red('\nError:'), error instanceof Error ? error.message : error);
+      process.exit(1);
+    }
   });
 
-// Add a command that runs a performance test
+// History command
 program
-  .command("perf-test")
-  .description("Run a simple performance test")
-  .option("-i, --iterations <number>", "Number of iterations", "1000")
+  .command('history')
+  .description('Show version history')
+  .option('-l, --limit <number>', 'Limit number of versions', '10')
+  .option('-o, --output <path>', 'Output directory', './output/validation-results')
   .action(async (options) => {
-    const { startMeasure, getAllPerformanceStats } = await import(
-      "../lib/telemetry/performance.js"
-    );
+    try {
+      const versionManager = new VersionManager(path.resolve(options.output));
+      await versionManager.initialize();
+      
+      const history = await versionManager.getVersionHistory(parseInt(options.limit));
+      
+      if (history.length === 0) {
+        console.log(chalk.yellow('No version history found'));
+        return;
+      }
 
-    const iterations = parseInt(options.iterations, 10);
-    logger.info(`Running performance test with ${iterations} iterations`);
-
-    // Run a simple test
-    const end = startMeasure("test-operation");
-
-    // Simulate some work
-    for (let i = 0; i < iterations; i++) {
-      const result = Math.sqrt(i) * Math.random();
+      console.log(chalk.bold('\n📋 Version History'));
+      console.log(chalk.gray('─'.repeat(80)));
+      
+      history.forEach(version => {
+        const icon = version.breaking ? '🔴' : '🟢';
+        console.log(
+          `${icon} ${chalk.bold(version.version)} - ${version.timestamp} ` +
+          `(${version.changeType || 'initial'})`
+        );
+        if (version.changeSummary) {
+          console.log(`   ${chalk.gray(version.changeSummary)}`);
+        }
+      });
+      
+      console.log(chalk.gray('─'.repeat(80)) + '\n');
+      
+    } catch (error) {
+      logger.error('Failed to get history', error);
+      console.error(chalk.red('Error:'), error instanceof Error ? error.message : error);
+      process.exit(1);
     }
+  });
 
-    const result = end({ iterations });
-    logger.info(
-      `Performance test completed in ${result.duration.toFixed(2)}ms`
-    );
-
-    // Print all stats
-    console.table(getAllPerformanceStats());
+// Compare command
+program
+  .command('compare')
+  .description('Compare two versions')
+  .requiredOption('--from <version>', 'Source version')
+  .requiredOption('--to <version>', 'Target version')
+  .option('-o, --output <path>', 'Output directory', './output/validation-results')
+  .action(async (options) => {
+    try {
+      const versionManager = new VersionManager(path.resolve(options.output));
+      await versionManager.initialize();
+      
+      const comparison = await versionManager.compareVersions(options.from, options.to);
+      
+      console.log(chalk.bold(`\n📊 Comparing ${options.from} → ${options.to}`));
+      console.log(chalk.gray('─'.repeat(50)));
+      
+      // TODO: Implement detailed comparison output
+      console.log(chalk.green('Comparison data loaded successfully'));
+      console.log('Detailed comparison report coming soon...');
+      
+    } catch (error) {
+      logger.error('Comparison failed', error);
+      console.error(chalk.red('Error:'), error instanceof Error ? error.message : error);
+      process.exit(1);
+    }
   });
 
 // Parse command line arguments
-program.parse();
-
-// If no arguments provided, show help
-if (process.argv.length <= 2) {
-  program.help();
-}
+program.parse(process.argv);

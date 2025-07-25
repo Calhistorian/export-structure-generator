@@ -1,0 +1,65 @@
+[
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440001",
+    "name": "John Doe",
+    "profile": {
+      "avatar": "https://example.com/avatars/john.jpg",
+      "bio": "Software developer",
+      "location": "San Francisco, CA",
+      "joinedAt": "2023-01-15T10:30:00Z"
+    },
+    "settings": {
+      "theme": "dark",
+      "notifications": true,
+      "language": "en"
+    },
+    "metadata": {
+      "lastLogin": "2024-01-10T08:45:00Z",
+      "loginCount": 42,
+      "isActive": true
+    },
+    "email": "john.doe@example.com"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440002",
+    "name": "Jane Smith",
+    "email": "jane.smith@example.com",
+    "profile": {
+      "avatar": "https://example.com/avatars/jane.jpg",
+      "bio": "Product manager",
+      "location": "New York, NY",
+      "joinedAt": "2023-02-20T14:15:00Z"
+    },
+    "settings": {
+      "theme": "light",
+      "notifications": false,
+      "language": "en"
+    },
+    "metadata": {
+      "lastLogin": "2024-01-09T16:20:00Z",
+      "loginCount": 38,
+      "isActive": true
+    }
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440003",
+    "name": "Bob Johnson",
+    "email": "bob.johnson@example.com",
+    "profile": {
+      "avatar": null,
+      "bio": "Designer",
+      "location": "Austin, TX",
+      "joinedAt": "2023-03-10T09:00:00Z"
+    },
+    "settings": {
+      "theme": "auto",
+      "notifications": true,
+      "language": "es"
+    },
+    "metadata": {
+      "lastLogin": "2024-01-08T11:30:00Z",
+      "loginCount": 25,
+      "isActive": false
+    }
+  }
+]

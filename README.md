@@ -1,129 +1,188 @@
-# TypeScript Project Template
+# Export Structure Validator
 
-A modern, feature-rich TypeScript template for Node.js applications.
+A powerful CLI tool that analyzes data exports (folders, ZIPs, JSON files) to document their structure, generate type-safe schemas, and detect changes over time. Perfect for maintaining parsers for third-party SaaS exports.
 
-## Features
+## 🚀 Features
 
-- 🚀 **Modern TypeScript** - Full ESM support with path aliases
-- 📦 **Zero build step** - Run TypeScript directly with ts-node/tsx
-- 🧪 **Testing** - Vitest setup with MSW for API mocking
-- 📊 **Logging** - Advanced logging with Winston
-- 📈 **Performance Monitoring** - Built-in performance measurement utilities
-- 🔍 **Type Safety** - Strong typing throughout the codebase
-- 🛠️ **CLI Tools** - Command-line interface using Commander
-- ⚙️ **Environment Management** - Type-safe environment variables with Zod validation
-- 🔄 **API Utilities** - Fetch and Axios clients with proper error handling
+- **Multi-format Support**: Analyze folders, ZIP archives, and individual JSON/CSV/XML/YAML files
+- **Schema Generation**: Automatically generate Zod v4 and JSON schemas from your data
+- **Change Detection**: Track structural changes between export versions with detailed reports
+- **Version Management**: Semantic versioning with complete history tracking
+- **Type Safety**: Generate TypeScript-first schemas with proper type inference
+- **CI/CD Ready**: Fail builds on breaking changes with configurable severity levels
+- **Beautiful Reports**: Markdown, HTML, and JSON output formats
 
-## Getting Started
-
-### Prerequisites
-
-- Node.js 18+ (recommended: 20+)
-- pnpm (recommended) or npm
-
-### Installation
+## 📦 Installation
 
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/typescript-template.git my-project
-cd my-project
-
-# Install dependencies
+# Clone and install
+git clone https://github.com/yourusername/export-structure-validator.git
+cd export-structure-validator
 pnpm install
-```
 
-### Development
-
-```bash
-# Start the development server with hot reload
-pnpm dev
-
-# Run the CLI
-pnpm cli
-
-# Run tests
-pnpm test
-```
-
-### Building for Production
-
-```bash
 # Build the project
 pnpm build
-
-# Start the production server
-pnpm start
 ```
 
-## Project Structure
+## 🔧 Usage
+
+### Basic Analysis
+
+```bash
+# Analyze a folder
+npx tsx src/cli/index.ts ./my-export-folder
+
+# Analyze a ZIP file
+npx tsx src/cli/index.ts ./export.zip
+
+# Analyze a single JSON file
+npx tsx src/cli/index.ts ./data.json
+```
+
+### Advanced Options
+
+```bash
+npx tsx src/cli/index.ts ./export \
+  --mode strict \                    # strict|loose|auto schema inference
+  --sample-size 5000 \              # Number of records to sample
+  --sample-strategy stratified \     # first|random|stratified
+  --output ./output/results \       # Output directory (default: ./output/validation-results)
+  --format markdown,json,html \     # Report formats
+  --auto-version                    # Auto-increment version based on changes
+```
+
+### CI/CD Integration
+
+```bash
+# Fail on breaking changes
+npx tsx src/cli/index.ts ./export --ci --fail-on breaking
+
+# Compare against a specific snapshot
+npx tsx src/cli/index.ts ./export --snapshot ./previous.snapshot.json
+```
+
+### Version Management
+
+```bash
+# View version history
+npx tsx src/cli/index.ts history
+
+# Compare two versions
+npx tsx src/cli/index.ts compare --from v1.0.0 --to v1.1.0
+```
+
+## 📊 Output Structure
 
 ```
-src/
-├── config/        # Configuration management
-├── lib/           # Core libraries and utilities
-│   ├── api/       # API clients and services
-│   ├── logger/    # Logging system
-│   └── telemetry/ # Performance monitoring
-├── utils/         # Utility functions
-├── test/          # Test setup and utilities
-│   └── mocks/     # Mock data and services
-├── cli/           # Command-line interface
-└── main.ts        # Application entry point
+output/validation-results/
+├── v1.2.3/                      # Version directory
+│   ├── metadata.json            # Version metadata
+│   ├── structure.json           # File tree structure
+│   ├── structure.snapshot.json  # Complete snapshot
+│   ├── schemas/                 # Generated schemas
+│   │   ├── users.schema.ts     # Zod schema
+│   │   ├── users.schema.json   # JSON schema
+│   │   └── index.ts            # Schema exports
+│   ├── changes.json            # Detailed changes
+│   ├── report.md               # Markdown report
+│   └── report.html             # Interactive HTML report
+├── versions.json               # Version manifest
+└── latest/                     # Symlink to current version
 ```
 
-## Utilities
+## 🎯 Use Cases
 
-### File System
+1. **SaaS Export Monitoring**: Track changes in third-party data exports
+2. **Parser Maintenance**: Ensure your parsers stay compatible with evolving formats
+3. **Schema Documentation**: Auto-generate documentation for data structures
+4. **Regression Testing**: Catch breaking changes before they hit production
+5. **Data Auditing**: Understand the structure of unknown exports
 
-- `fs.ts` - Basic file system operations
-- `fsEnhanced.ts` - Advanced file system utilities using fs-extra
+## 📝 Schema Inference Modes
 
-### HTTP/API
+- **`strict`**: Captures all nullability and optionality exactly as found
+- **`loose`**: Ignores rare nulls for cleaner schemas
+- **`auto`**: Uses thresholds (>5% nulls = nullable)
 
-- `http.ts` - Fetch-based HTTP client with error handling
-- `api.ts` - Axios-based API client with interceptors
+## 🔍 Change Detection
 
-### Data Handling
+The tool detects various types of changes:
 
-- `data.ts` - Type-safe data manipulation utilities
+- **Breaking Changes** 🔴
+  - Type changes (string → number)
+  - Field removals
+  - Required fields becoming optional
+  
+- **Minor Changes** 🟡
+  - New optional fields
+  - Fields becoming nullable
+  
+- **Patch Changes** 🟢
+  - Metadata changes (file size, timestamps)
 
-### Validation
+## 📋 Example Reports
 
-- `validation.ts` - Input validation using Zod
+### Markdown Report
+```markdown
+# Export Structure Validation Report
 
-## Testing
+Version: 1.2.3 → 2.0.0 (BREAKING CHANGES)
+Date: 2024-01-15T10:30:00Z
 
-This template uses Vitest for testing and MSW (Mock Service Worker) for API mocking.
+## Breaking Changes
+
+### 🔴 user.profile.email
+- Type changed: `string` → `string | null`
+- Migration: Add null checks before using email field
+```
+
+### Generated Zod Schema
+```typescript
+import { z } from 'zod';
+
+export const UserSchema = z.object({
+  id: z.string().uuid(),
+  profile: z.object({
+    name: z.string(),
+    email: z.string().email().nullable(),
+    avatar: z.string().url().optional(),
+  }),
+  settings: z.object({
+    theme: z.enum(['light', 'dark']),
+    notifications: z.boolean(),
+  }),
+  createdAt: z.string().datetime(),
+});
+
+export type User = z.infer<typeof UserSchema>;
+```
+
+## 🧪 Testing
 
 ```bash
 # Run tests
 pnpm test
 
-# Run tests in watch mode
-pnpm test:watch
-
-# Run tests with coverage
+# Run with coverage
 pnpm test:coverage
 
-# Run tests with UI
-pnpm test:ui
+# Watch mode
+pnpm test:watch
 ```
 
-## CLI
-
-The template includes a CLI built with Commander:
+## 🛠️ Development
 
 ```bash
-# Run the CLI
-pnpm cli
+# Run in development mode
+pnpm dev
 
-# Show environment information
-pnpm cli info
+# Type checking
+pnpm typecheck
 
-# Run a performance test
-pnpm cli perf-test --iterations 5000
+# Linting
+pnpm lint
 ```
 
-## License
+## 📄 License
 
-ISC 
+ISC

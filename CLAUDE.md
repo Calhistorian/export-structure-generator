@@ -15,8 +15,8 @@ pnpm build
 # Run the production build
 pnpm start
 
-# Run the CLI
-pnpm cli
+# Run the CLI tool
+npx tsx src/cli/index.ts <export-path> [options]
 ```
 
 ### Testing
@@ -25,7 +25,7 @@ pnpm cli
 pnpm test
 
 # Run a single test file
-pnpm test src/lib/api/userService.test.ts
+pnpm test src/core/__tests__/validator.test.ts
 
 # Run tests in watch mode
 pnpm test:watch
@@ -44,53 +44,71 @@ pnpm lint
 
 # Run ESLint with auto-fix
 pnpm lint:fix
+
+# Type checking (when available)
+pnpm typecheck
 ```
 
 ## High-Level Architecture
 
-This is a modern TypeScript template for Node.js applications with full ESM support. The architecture follows a modular approach with clear separation of concerns:
+This is an Export Structure Validator that analyzes data exports to document structure and detect changes. The architecture follows a modular approach:
 
 ### Core Components
 
 1. **Entry Points**
-   - `src/main.ts` - Main application entry demonstrating utilities usage
-   - `src/cli/index.ts` - CLI interface built with Commander.js
+   - `src/cli/index.ts` - Primary CLI interface using Commander.js
+   - `src/main.ts` - Demo/documentation entry point
 
-2. **Configuration Layer** (`src/config/`)
-   - Environment variable management with Zod validation
-   - Type-safe access to configuration values
-   - Supports both development and production environments
+2. **Core Modules** (`src/core/`)
+   - **validator.ts** - Main orchestrator that coordinates the validation pipeline
+   - **fileProcessor.ts** - Handles file/directory/ZIP traversal and metadata extraction
+   - **changeDetection.ts** - Compares snapshots and identifies structural changes
+   - **versionManager.ts** - Manages semantic versioning and version history
 
-3. **Core Libraries** (`src/lib/`)
-   - **logger/** - Winston-based logging system with service-specific loggers
-   - **telemetry/** - Performance monitoring utilities for measuring execution time
-   - **api/** - Service layer with MSW mocking support for tests
+3. **Analyzers** (`src/analyzers/`)
+   - **schemaInference.ts** - Infers Zod schemas from JSON/CSV/XML/YAML data
 
-4. **Utilities** (`src/utils/`)
-   - **fs.ts** - Basic file operations (readJsonFile, writeJsonFile)
-   - **fsEnhanced.ts** - Advanced operations using fs-extra
-   - **api.ts** - Axios-based HTTP client with interceptors
-   - **http.ts** - Fetch-based HTTP client
-   - **data.ts** - Data manipulation (deepClone, groupBy)
-   - **validation.ts** - Zod-based validation schemas
+4. **Generators** (`src/generators/`)
+   - **schemaGenerator.ts** - Generates Zod TypeScript code and JSON schemas
 
-5. **Testing Infrastructure**
-   - Vitest as test runner with MSW for API mocking
-   - Test setup in `__tests__/setup.ts`
-   - Mock handlers in `__tests__/mocks/`
+5. **Reporters** (`src/reporters/`)
+   - **markdownReporter.ts** - Generates human-readable Markdown reports
+   - **jsonReporter.ts** - Generates machine-readable JSON reports
+   - **htmlReporter.ts** - Generates interactive HTML reports
+
+6. **Type Definitions** (`src/types/`)
+   - Central type definitions for the entire application
 
 ### Key Patterns
 
-- **ESM Modules**: All imports use `.js` extensions for proper ESM resolution
-- **Type Safety**: Strong TypeScript typing throughout with strict mode enabled
-- **Service Loggers**: Create dedicated loggers per service using `createServiceLogger()`
-- **Performance Tracking**: Use `startMeasure()` / `endMeasure()` for monitoring
-- **Error Handling**: Consistent error handling with proper logging
-- **API Mocking**: MSW setup for testing external API interactions
+- **Pipeline Architecture**: FileProcessor → SchemaInference → ChangeDetection → Reporting
+- **Snapshot-based Comparison**: Each validation creates a versioned snapshot for future comparisons
+- **Semantic Versioning**: Automatic version bumping based on change severity
+- **Multi-format Support**: Unified handling of JSON, CSV, XML, YAML through adapters
+- **Progressive Schema Building**: Handles large datasets through sampling strategies
 
-### TypeScript Configuration
+### CLI Usage Examples
 
-- Target: ESNext with ESM module system
-- Path alias: `@/*` maps to `src/*` and `lib/*`
-- No build required for development (uses tsx/ts-node)
-- Strict mode enabled with all type checking features
+```bash
+# Basic validation
+npx tsx src/cli/index.ts ./export-folder
+
+# With options
+npx tsx src/cli/index.ts ./export.zip --mode loose --format html,json
+
+# CI mode
+npx tsx src/cli/index.ts ./export --ci --fail-on breaking
+
+# Version management
+npx tsx src/cli/index.ts history
+npx tsx src/cli/index.ts compare --from v1.0.0 --to v1.1.0
+```
+
+### Important Implementation Details
+
+- Uses Zod for runtime schema validation and type generation
+- File processing uses streams for memory efficiency with large exports
+- Change detection uses deep-diff for structural comparison
+- Version management follows semver principles
+- All file paths must be absolute (resolved with path.resolve)
+- Schemas are generated with configurable strictness modes

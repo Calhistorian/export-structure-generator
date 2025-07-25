@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<catalog>
+  <product id="PROD-001">
+    <name>Wireless Headphones</name>
+    <description>High-quality wireless headphones with noise cancellation</description>
+    <price currency="USD">129.99</price>
+    <category>Electronics</category>
+    <subcategory>Audio</subcategory>
+    <stock>150</stock>
+    <attributes>
+      <attribute name="color">Black</attribute>
+      <attribute name="battery_life">30 hours</attribute>
+      <attribute name="wireless">true</attribute>
+    </attributes>
+    <images>
+      <image primary="true">https://example.com/images/headphones-black-1.jpg</image>
+      <image>https://example.com/images/headphones-black-2.jpg</image>
+    </images>
+  </product>
+  
+  <product id="PROD-002">
+    <name>Smart Watch</name>
+    <description>Fitness tracking smart watch with heart rate monitor</description>
+    <price currency="USD">249.99</price>
+    <category>Electronics</category>
+    <subcategory>Wearables</subcategory>
+    <stock>75</stock>
+    <attributes>
+      <attribute name="color">Silver</attribute>
+      <attribute name="display">AMOLED</attribute>
+      <attribute name="water_resistant">true</attribute>
+    </attributes>
+    <images>
+      <image primary="true">https://example.com/images/watch-silver-1.jpg</image>
+    </images>
+  </product>
+  
+  <product id="PROD-003">
+    <name>Laptop Stand</name>
+    <description>Adjustable aluminum laptop stand for ergonomic viewing</description>
+    <price currency="USD">59.99</price>
+    <category>Accessories</category>
+    <subcategory>Computer</subcategory>
+    <stock>200</stock>
+    <attributes>
+      <attribute name="material">Aluminum</attribute>
+      <attribute name="adjustable">true</attribute>
+      <attribute name="max_weight">10kg</attribute>
+    </attributes>
+    <images>
+      <image primary="true">https://example.com/images/laptop-stand-1.jpg</image>
+      <image>https://example.com/images/laptop-stand-2.jpg</image>
+      <image>https://example.com/images/laptop-stand-3.jpg</image>
+    </images>
+  </product>
+</catalog>

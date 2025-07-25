@@ -4,6 +4,7 @@ jspm_packages/
 
 # Output folder
 src/output
+output/
 
 # Vite
 .vite/
