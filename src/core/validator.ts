@@ -20,6 +20,7 @@ import { JsonReporter } from '../reporters/jsonReporter.js';
 import { HtmlReporter } from '../reporters/htmlReporter.js';
 import { SchemaGenerator } from '../generators/schemaGenerator.js';
 import { createServiceLogger } from '../lib/logger/index.js';
+import { exportRegistry } from './exportRegistry.js';
 
 const logger = createServiceLogger('validator');
 
@@ -28,12 +29,17 @@ export class ExportValidator {
   private changeDetector: ChangeDetector;
   private versionManager: VersionManager;
   private options: ValidationOptions;
+  private outputDir: string;
 
   constructor(options: ValidationOptions) {
     this.options = options;
     this.fileProcessor = new FileProcessor();
     this.changeDetector = new ChangeDetector();
-    this.versionManager = new VersionManager(options.output);
+    
+    // Use export-specific output directory
+    const exportType = exportRegistry.getOrDefault(options.exportType || 'generic');
+    this.outputDir = path.join(options.output, exportType.outputName);
+    this.versionManager = new VersionManager(this.outputDir);
   }
 
   async validate(inputPath: string): Promise<void> {
@@ -124,7 +130,7 @@ export class ExportValidator {
       // Generate schemas
       spinner.text = 'Generating schema files...';
       const schemaGenerator = new SchemaGenerator();
-      const versionDir = path.join(this.options.output, `v${snapshot.metadata.version}`);
+      const versionDir = path.join(this.outputDir, `v${snapshot.metadata.version}`);
       await schemaGenerator.generateZodSchemas(schemas, versionDir);
       
       if (this.options.format.includes('json')) {
@@ -195,7 +201,7 @@ export class ExportValidator {
     }
 
     try {
-      const versionDir = path.join(this.options.output, `v${latestVersion}`);
+      const versionDir = path.join(this.outputDir, `v${latestVersion}`);
       const snapshotPath = path.join(versionDir, 'structure.snapshot.json');
       const content = await fs.readFile(snapshotPath, 'utf-8');
       return JSON.parse(content);
@@ -333,7 +339,7 @@ export class ExportValidator {
       }
     }
 
-    console.log('\n' + chalk.bold('Output:'), this.options.output);
+    console.log('\n' + chalk.bold('Output:'), this.outputDir);
     console.log(chalk.gray('─'.repeat(50)) + '\n');
   }
 }

@@ -7,6 +7,7 @@ import { ExportValidator } from '../core/validator.js';
 import { VersionManager } from '../core/versionManager.js';
 import { ValidationOptions } from '../types/index.js';
 import { createServiceLogger } from '../lib/logger/index.js';
+import { exportRegistry } from '../core/exportRegistry.js';
 
 const logger = createServiceLogger('cli');
 
@@ -18,6 +19,7 @@ program
   .description('Analyzes data exports to document structure and detect changes')
   .version('1.0.0')
   .argument('<input>', 'Path to export (folder, .zip, or .json file)')
+  .option('-t, --type <type>', 'Export type (telegram|google-takeout|twitter-archive|generic)', 'generic')
   .option('-m, --mode <mode>', 'Schema inference mode', 'strict')
   .option('-s, --sample-size <number>', 'Number of records to sample', '1000')
   .option('--sample-strategy <strategy>', 'Sampling strategy', 'stratified')
@@ -33,6 +35,10 @@ program
     try {
       const formats = options.format.split(',').map((f: string) => f.trim());
       
+      // Get export type configuration
+      const exportType = exportRegistry.getOrDefault(options.type);
+      logger.info(`Using export type: ${options.type} (${exportType.name})`);
+      
       const validationOptions: ValidationOptions = {
         mode: options.mode as 'strict' | 'loose' | 'auto',
         sampleSize: parseInt(options.sampleSize),
@@ -44,7 +50,8 @@ program
         snapshot: options.snapshot,
         autoVersion: options.autoVersion,
         ci: options.ci,
-        failOn: options.failOn as 'breaking' | 'minor' | 'patch' | undefined
+        failOn: options.failOn as 'breaking' | 'minor' | 'patch' | undefined,
+        exportType: options.type
       };
 
       const validator = new ExportValidator(validationOptions);
@@ -63,9 +70,14 @@ program
   .description('Show version history')
   .option('-l, --limit <number>', 'Limit number of versions', '10')
   .option('-o, --output <path>', 'Output directory', './output/validation-results')
+  .option('-t, --type <type>', 'Export type', 'generic')
   .action(async (options) => {
     try {
-      const versionManager = new VersionManager(path.resolve(options.output));
+      // Get export type configuration
+      const exportType = exportRegistry.getOrDefault(options.type);
+      const exportOutputDir = path.join(path.resolve(options.output), exportType.outputName);
+      
+      const versionManager = new VersionManager(exportOutputDir);
       await versionManager.initialize();
       
       const history = await versionManager.getVersionHistory(parseInt(options.limit));
@@ -105,9 +117,14 @@ program
   .requiredOption('--from <version>', 'Source version')
   .requiredOption('--to <version>', 'Target version')
   .option('-o, --output <path>', 'Output directory', './output/validation-results')
+  .option('-t, --type <type>', 'Export type', 'generic')
   .action(async (options) => {
     try {
-      const versionManager = new VersionManager(path.resolve(options.output));
+      // Get export type configuration
+      const exportType = exportRegistry.getOrDefault(options.type);
+      const exportOutputDir = path.join(path.resolve(options.output), exportType.outputName);
+      
+      const versionManager = new VersionManager(exportOutputDir);
       await versionManager.initialize();
       
       const comparison = await versionManager.compareVersions(options.from, options.to);

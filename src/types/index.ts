@@ -63,6 +63,7 @@ export interface ValidationOptions {
   autoVersion: boolean;
   ci: boolean;
   failOn?: ChangeSeverity;
+  exportType?: string;
 }
 
 export interface SchemaInferenceOptions {
